@@ -2,6 +2,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using System.Runtime.Serialization.Formatters.Binary;
+using System.IO;
+using System;
 
 public class SceneController : MonoBehaviour {
 
@@ -38,11 +41,39 @@ public class SceneController : MonoBehaviour {
         }
         
     }
+
+
     private void OnGUI() {
         GUIStyle style = new GUIStyle();
         style.fontSize = 56;
         GUI.Label(new Rect(10, 10, 180, 80), "Active scene index : "  + SceneManager.GetActiveScene().buildIndex, style);
     }
-   
 
+    public void SaveActiveScene()
+    {
+        FileStream file = File.Open(Application.persistentDataPath + "/sceneInfo.dat", FileMode.Create);
+        Scene data = new Scene();
+        data.sceneIndex = SceneManager.GetActiveScene().buildIndex;
+        BinaryFormatter bf = new BinaryFormatter();
+        bf.Serialize(file, data);
+        file.Close();
+    }
+
+    public void LoadActiveScene()
+    {
+        BinaryFormatter bf = new BinaryFormatter();
+        if (!File.Exists(Application.persistentDataPath + "/sceneInfo.dat"))
+        {
+            throw new Exception("Scene file does not exists");
+        }
+        FileStream file = File.Open(Application.persistentDataPath + "/sceneInfo.dat", FileMode.Open);
+        Scene data = (Scene)bf.Deserialize(file);
+        SceneManager.LoadScene(data.sceneIndex);
+        file.Close();
+    }
+}
+[Serializable]
+class Scene
+{
+    public int sceneIndex;
 }
